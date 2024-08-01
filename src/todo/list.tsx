@@ -30,9 +30,7 @@ export const TodoList = () => {
       ))}
       <Button
         variant="contained"
-        onClick={() =>
-          setItems(items => [...items, ...new Array(100).fill(emptyItem)])
-        }
+        onClick={() => setItems(items => [...items, emptyItem])}
       >
         Add Item
       </Button>
