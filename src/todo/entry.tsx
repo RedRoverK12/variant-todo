@@ -1,20 +1,20 @@
 import { Checkbox, Grid, IconButton, TextField } from "@mui/material";
 import { TodoItem } from "./types";
 import { Delete } from "@mui/icons-material";
-import { memo } from "react";
+import { Dispatch, memo } from "react";
+import { TodoAction } from "./reducer";
 
 export const TodoEntry: React.FC<{
   index: number;
   item: TodoItem;
-  setItem: (item: TodoItem) => void;
-  deleteItem: () => void;
-}> = memo(({ index, item, setItem, deleteItem }) => {
+  dispatch: Dispatch<TodoAction>;
+}> = memo(({ index, item, dispatch }) => {
   return (
     <Grid container alignItems="center" item width="100%">
       <Grid item>
         <Checkbox
           checked={item.isDone}
-          onChange={e => setItem({ ...item, isDone: e.target.checked })}
+          onChange={() => dispatch({ type: "userToggledItem", index })}
         />
       </Grid>
       <Grid item flex={1}>
@@ -25,12 +25,18 @@ export const TodoEntry: React.FC<{
           placeholder={`Item ${index + 1}`}
           value={item.title ?? ""}
           onChange={e =>
-            setItem({ ...item, title: e.target.value || undefined })
+            dispatch({
+              type: "userEditedItemTitle",
+              index,
+              title: e.target.value || undefined,
+            })
           }
         />
       </Grid>
       <Grid item>
-        <IconButton onClick={deleteItem}>
+        <IconButton
+          onClick={() => dispatch({ type: "userRemovedItem", index })}
+        >
           <Delete />
         </IconButton>
       </Grid>

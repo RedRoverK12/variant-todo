@@ -1,10 +1,10 @@
-import { Fragment, useState } from "react";
+import { Fragment, useReducer } from "react";
 import { Box, Button, Grid } from "@mui/material";
 import { TodoEntry } from "./entry";
-import { emptyItem, TodoItem } from "./types";
+import { initialTodoState, todoReducer } from "./reducer";
 
 export const TodoList = () => {
-  const [items, setItems] = useState<TodoItem[]>([]);
+  const [items, dispatch] = useReducer(todoReducer, initialTodoState);
   return (
     <Grid
       container
@@ -13,24 +13,13 @@ export const TodoList = () => {
     >
       {items.map((item, index) => (
         <Fragment key={index}>
-          <TodoEntry
-            index={index}
-            item={item}
-            setItem={newItem =>
-              setItems(items =>
-                items.map((item, ind) => (ind === index ? newItem : item))
-              )
-            }
-            deleteItem={() =>
-              setItems(items => items.filter((_, ind) => index !== ind))
-            }
-          />
+          <TodoEntry index={index} item={item} dispatch={dispatch} />
           <Divider />
         </Fragment>
       ))}
       <Button
         variant="contained"
-        onClick={() => setItems(items => [...items, emptyItem])}
+        onClick={() => dispatch({ type: "userAddedItem" })}
       >
         Add Item
       </Button>
