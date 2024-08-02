@@ -7,7 +7,15 @@ export type TodoAction =
   | { type: "userAddedItem" }
   | { type: "userToggledItem"; index: number }
   | { type: "userEditedItemTitle"; index: number; title: string | undefined }
-  | { type: "userRemovedItem"; index: number };
+  | { type: "userRemovedItem"; index: number }
+  | { type: "userAddedNote"; itemIndex: number; contents: string }
+  | {
+      type: "userEditedNote";
+      itemIndex: number;
+      noteIndex: number;
+      contents: string;
+    }
+  | { type: "userRemovedNote"; itemIndex: number; noteIndex: number };
 
 export const todoReducer = (
   state: TodoState,
@@ -26,5 +34,31 @@ export const todoReducer = (
       );
     case "userRemovedItem":
       return state.filter((_, ind) => ind !== action.index);
+    case "userAddedNote":
+      return state.map((item, ind) =>
+        ind === action.itemIndex
+          ? { ...item, notes: [...item.notes, action.contents] }
+          : item
+      );
+    case "userEditedNote":
+      return state.map((item, ind) =>
+        ind === action.itemIndex
+          ? {
+              ...item,
+              notes: item.notes.map((note, ind) =>
+                action.noteIndex === ind ? action.contents : note
+              ),
+            }
+          : item
+      );
+    case "userRemovedNote":
+      return state.map((item, ind) =>
+        ind === action.itemIndex
+          ? {
+              ...item,
+              notes: item.notes.filter((_, ind) => action.noteIndex !== ind),
+            }
+          : item
+      );
   }
 };
