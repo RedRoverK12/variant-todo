@@ -8,41 +8,29 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Dispatch, useState } from "react";
-import { TodoAction } from "./reducer";
+import { useState } from "react";
+import { useTodoDispatch, useTodoState } from "../store";
 
 export const NotesDialog: React.FC<{
   isOpen: boolean;
-  itemTitle: string;
   itemIndex: number;
-  notes: string[];
   onClose: () => void;
-  dispatch: Dispatch<TodoAction>;
-}> = ({ isOpen, itemTitle, itemIndex, notes, onClose, dispatch }) => {
+}> = ({ isOpen, itemIndex, onClose }) => {
   const [noteIndex, setNoteIndex] = useState<number>();
   const [showNewNote, setShowNewNote] = useState(false);
   return (
     <Dialog open={isOpen} onClose={onClose} fullWidth>
       {noteIndex !== undefined ? (
         <ShowNote
-          itemTitle={itemTitle}
           itemIndex={itemIndex}
-          existingNote={notes[noteIndex]}
           noteIndex={noteIndex}
           goBack={() => setNoteIndex(undefined)}
-          dispatch={dispatch}
         />
       ) : showNewNote ? (
-        <ShowNote
-          itemTitle={itemTitle}
-          itemIndex={itemIndex}
-          goBack={() => setShowNewNote(false)}
-          dispatch={dispatch}
-        />
+        <ShowNote itemIndex={itemIndex} goBack={() => setShowNewNote(false)} />
       ) : (
         <PickNote
-          itemTitle={itemTitle}
-          notes={notes}
+          itemIndex={itemIndex}
           goToShowNote={ind => setNoteIndex(ind)}
           goToNewNote={() => setShowNewNote(true)}
         />
@@ -52,62 +40,70 @@ export const NotesDialog: React.FC<{
 };
 
 const PickNote: React.FC<{
-  itemTitle: string;
-  notes: string[];
+  itemIndex: number;
   goToShowNote: (index: number) => void;
   goToNewNote: () => void;
-}> = ({ itemTitle, notes, goToShowNote, goToNewNote }) => (
-  <>
-    <DialogTitle>{`Notes for ${itemTitle}`}</DialogTitle>
-    <DialogContent>
-      <Grid container flexDirection="column" gap={2}>
-        {notes.map((note, index) => (
-          <Grid
-            container
-            item
-            flexDirection="row"
-            alignItems="center"
-            key={index}
-            wrap="nowrap"
-          >
-            <Grid item flex={1} minWidth={0}>
-              <Typography
-                textOverflow="ellipsis"
-                whiteSpace="nowrap"
-                overflow="hidden"
-              >
-                {note}
-              </Typography>
+}> = ({ itemIndex, goToShowNote, goToNewNote }) => {
+  const title = useTodoState(
+    s => `Notes for ${s[itemIndex].title ?? `Item ${itemIndex + 1}`}`
+  );
+  const notes = useTodoState(s => s[itemIndex].notes);
+  return (
+    <>
+      <DialogTitle>{title}</DialogTitle>
+      <DialogContent>
+        <Grid container flexDirection="column" gap={2}>
+          {notes.map((note, index) => (
+            <Grid
+              container
+              item
+              flexDirection="row"
+              alignItems="center"
+              key={index}
+              wrap="nowrap"
+            >
+              <Grid item flex={1} minWidth={0}>
+                <Typography
+                  textOverflow="ellipsis"
+                  whiteSpace="nowrap"
+                  overflow="hidden"
+                >
+                  {note}
+                </Typography>
+              </Grid>
+              <Grid item>
+                <Button onClick={() => goToShowNote(index)}>Edit</Button>
+              </Grid>
             </Grid>
-            <Grid item>
-              <Button onClick={() => goToShowNote(index)}>Edit</Button>
-            </Grid>
-          </Grid>
-        ))}
-        <Button variant="contained" onClick={() => goToNewNote()}>
-          Add Note
-        </Button>
-      </Grid>
-    </DialogContent>
-  </>
-);
+          ))}
+          <Button variant="contained" onClick={() => goToNewNote()}>
+            Add Note
+          </Button>
+        </Grid>
+      </DialogContent>
+    </>
+  );
+};
 
 const ShowNote: React.FC<{
-  itemTitle: string;
   itemIndex: number;
-  existingNote?: string;
   noteIndex?: number;
   goBack: () => void;
-  dispatch: Dispatch<TodoAction>;
-}> = ({ itemTitle, itemIndex, existingNote, noteIndex, goBack, dispatch }) => {
+}> = ({ itemIndex, noteIndex, goBack }) => {
+  const title = useTodoState(s => {
+    const itemTitle = s[itemIndex].title ?? `Item ${itemIndex + 1}`;
+    return noteIndex === undefined
+      ? `New Note for ${itemTitle}`
+      : `Note ${noteIndex + 1} for ${itemTitle}`;
+  });
+  const existingNote = useTodoState(s =>
+    noteIndex !== undefined ? s[itemIndex].notes[noteIndex] : undefined
+  );
+  const dispatch = useTodoDispatch();
   const [text, setText] = useState(existingNote ?? "");
   return (
     <>
-      <DialogTitle>
-        {noteIndex !== undefined
-          ? `Note ${noteIndex + 1} for ${itemTitle}`
-          : `New note for ${itemTitle}`}
-      </DialogTitle>
+      <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <TextField
           fullWidth

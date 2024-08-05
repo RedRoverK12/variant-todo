@@ -1,19 +1,21 @@
-import { Fragment, useReducer } from "react";
+import { Fragment } from "react";
 import { Box, Button, Grid } from "@mui/material";
 import { TodoEntry } from "./entry";
-import { initialTodoState, todoReducer } from "./reducer";
+import { useTodoState, useTodoDispatch } from "../store";
 
 export const TodoList = () => {
-  const [items, dispatch] = useReducer(todoReducer, initialTodoState);
+  //const [items, dispatch] = useReducer(todoReducer, initialTodoState);
+  const indices = useTodoState(state => state.map((_, i) => i));
+  const dispatch = useTodoDispatch();
   return (
     <Grid
       container
       flexDirection="column"
       padding={theme => theme.spacing(1, 2)}
     >
-      {items.map((item, index) => (
+      {indices.map(index => (
         <Fragment key={index}>
-          <TodoEntry index={index} item={item} dispatch={dispatch} />
+          <TodoEntry index={index} />
           <Divider />
         </Fragment>
       ))}
