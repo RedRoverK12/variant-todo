@@ -126,7 +126,7 @@ const ShowNote: React.FC<{
           flex={1}
         >
           <Grid item>
-            {!!noteIndex && (
+            {noteIndex !== undefined && (
               <Button
                 onClick={() => {
                   dispatch({ type: "userRemovedNote", itemIndex, noteIndex });
