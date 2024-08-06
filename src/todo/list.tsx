@@ -4,7 +4,6 @@ import { TodoEntry } from "./entry";
 import { useTodoState, useTodoDispatch } from "../store";
 
 export const TodoList = () => {
-  //const [items, dispatch] = useReducer(todoReducer, initialTodoState);
   const indices = useTodoState(state => state.map((_, i) => i));
   const dispatch = useTodoDispatch();
   return (
