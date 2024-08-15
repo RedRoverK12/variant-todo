@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { Box, Button, Grid } from "@mui/material";
 import { TodoEntry } from "./entry";
 import { useTodoState, useTodoDispatch } from "../store";
+import { TodoAction } from "./reducer";
 
 export const TodoList = () => {
   const indices = useTodoState(state => state.map((_, i) => i));
@@ -20,7 +21,7 @@ export const TodoList = () => {
       ))}
       <Button
         variant="contained"
-        onClick={() => dispatch({ type: "userAddedItem" })}
+        onClick={() => dispatch(TodoAction.userAddedItem())}
       >
         Add Item
       </Button>

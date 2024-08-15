@@ -3,6 +3,7 @@ import { Delete, Note } from "@mui/icons-material";
 import { memo, useState } from "react";
 import { NotesDialog } from "./notes-dialog";
 import { useTodoDispatch, useTodoState } from "../store";
+import { TodoAction } from "./reducer";
 
 export const TodoEntry: React.FC<{
   index: number;
@@ -19,7 +20,7 @@ export const TodoEntry: React.FC<{
       <Grid item>
         <ViewNotes index={index} />
         <IconButton
-          onClick={() => dispatch({ type: "userRemovedItem", index })}
+          onClick={() => dispatch(TodoAction.userRemovedItem({ index }))}
         >
           <Delete />
         </IconButton>
@@ -34,7 +35,7 @@ const IsDone: React.FC<{ index: number }> = ({ index }) => {
   return (
     <Checkbox
       checked={isDone}
-      onChange={() => dispatch({ type: "userToggledItem", index })}
+      onChange={() => dispatch(TodoAction.userToggledItem({ index }))}
     />
   );
 };
@@ -50,11 +51,12 @@ const Title: React.FC<{ index: number }> = ({ index }) => {
       placeholder={`Item ${index + 1}`}
       value={title}
       onChange={e =>
-        dispatch({
-          type: "userEditedItemTitle",
-          index,
-          title: e.target.value || undefined,
-        })
+        dispatch(
+          TodoAction.userEditedItemTitle({
+            index,
+            title: e.target.value || undefined,
+          })
+        )
       }
     />
   );

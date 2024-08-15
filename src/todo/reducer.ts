@@ -1,64 +1,59 @@
+import { fields, match, TypeNames, variantModule, VariantOf } from "variant";
 import { emptyItem, TodoItem } from "./types";
 
 export type TodoState = TodoItem[];
 export const initialTodoState: TodoState = [];
 
-export type TodoAction =
-  | { type: "userAddedItem" }
-  | { type: "userToggledItem"; index: number }
-  | { type: "userEditedItemTitle"; index: number; title: string | undefined }
-  | { type: "userRemovedItem"; index: number }
-  | { type: "userAddedNote"; itemIndex: number; contents: string }
-  | {
-      type: "userEditedNote";
-      itemIndex: number;
-      noteIndex: number;
-      contents: string;
-    }
-  | { type: "userRemovedNote"; itemIndex: number; noteIndex: number };
+export const TodoAction = variantModule({
+  userAddedItem: {},
+  userToggledItem: fields<{ index: number }>(),
+  userEditedItemTitle: fields<{ index: number; title: string | undefined }>(),
+  userRemovedItem: fields<{ index: number }>(),
+  userAddedNote: fields<{ itemIndex: number; contents: string }>(),
+  userEditedNote: fields<{
+    itemIndex: number;
+    noteIndex: number;
+    contents: string;
+  }>(),
+  userRemovedNote: fields<{ itemIndex: number; noteIndex: number }>(),
+});
+export type TodoAction<T extends TypeNames<typeof TodoAction> = undefined> =
+  VariantOf<typeof TodoAction, T>;
 
-export const todoReducer = (
-  state: TodoState,
-  action: TodoAction
-): TodoState => {
-  switch (action.type) {
-    case "userAddedItem":
-      return [...state, emptyItem];
-    case "userToggledItem":
-      return state.map((item, ind) =>
-        ind === action.index ? { ...item, isDone: !item.isDone } : item
-      );
-    case "userEditedItemTitle":
-      return state.map((item, ind) =>
-        ind === action.index ? { ...item, title: action.title } : item
-      );
-    case "userRemovedItem":
-      return state.filter((_, ind) => ind !== action.index);
-    case "userAddedNote":
-      return state.map((item, ind) =>
-        ind === action.itemIndex
-          ? { ...item, notes: [...item.notes, action.contents] }
-          : item
-      );
-    case "userEditedNote":
-      return state.map((item, ind) =>
-        ind === action.itemIndex
+export const todoReducer = (state: TodoState, action: TodoAction): TodoState =>
+  match(action, {
+    userAddedItem: () => [...state, emptyItem],
+    userToggledItem: ({ index }) =>
+      state.map((item, ind) =>
+        ind === index ? { ...item, isDone: !item.isDone } : item
+      ),
+    userEditedItemTitle: ({ index, title }) =>
+      state.map((item, ind) =>
+        ind === index ? { ...item, title: title } : item
+      ),
+    userRemovedItem: ({ index }) => state.filter((_, ind) => ind !== index),
+    userAddedNote: ({ itemIndex, contents }) =>
+      state.map((item, ind) =>
+        ind === itemIndex ? { ...item, notes: [...item.notes, contents] } : item
+      ),
+    userEditedNote: ({ itemIndex, noteIndex, contents }) =>
+      state.map((item, ind) =>
+        ind === itemIndex
           ? {
               ...item,
               notes: item.notes.map((note, ind) =>
-                action.noteIndex === ind ? action.contents : note
+                noteIndex === ind ? contents : note
               ),
             }
           : item
-      );
-    case "userRemovedNote":
-      return state.map((item, ind) =>
-        ind === action.itemIndex
+      ),
+    userRemovedNote: ({ itemIndex, noteIndex }) =>
+      state.map((item, ind) =>
+        ind === itemIndex
           ? {
               ...item,
-              notes: item.notes.filter((_, ind) => action.noteIndex !== ind),
+              notes: item.notes.filter((_, ind) => noteIndex !== ind),
             }
           : item
-      );
-  }
-};
+      ),
+  });

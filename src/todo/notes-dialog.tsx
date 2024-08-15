@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useTodoDispatch, useTodoState } from "../store";
+import { TodoAction } from "./reducer";
 
 export const NotesDialog: React.FC<{
   isOpen: boolean;
@@ -125,7 +126,9 @@ const ShowNote: React.FC<{
             {noteIndex !== undefined && (
               <Button
                 onClick={() => {
-                  dispatch({ type: "userRemovedNote", itemIndex, noteIndex });
+                  dispatch(
+                    TodoAction.userRemovedNote({ itemIndex, noteIndex })
+                  );
                   goBack();
                 }}
               >
@@ -146,13 +149,15 @@ const ShowNote: React.FC<{
               onClick={() => {
                 dispatch(
                   noteIndex !== undefined
-                    ? {
-                        type: "userEditedNote",
+                    ? TodoAction.userEditedNote({
                         itemIndex,
                         noteIndex,
                         contents: text,
-                      }
-                    : { type: "userAddedNote", itemIndex, contents: text }
+                      })
+                    : TodoAction.userAddedNote({
+                        itemIndex,
+                        contents: text,
+                      })
                 );
                 goBack();
               }}
