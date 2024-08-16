@@ -1,12 +1,24 @@
-import { fields, match, TypeNames, variantModule, VariantOf } from "variant";
-import { emptyItem, TodoItem } from "./types";
+import {
+  fields,
+  match,
+  matcher,
+  matchLiteral,
+  TypeNames,
+  variantModule,
+  VariantOf,
+} from "variant";
+import { emptyItem, TodoItem, TodoItemStatus } from "./types";
 
 export type TodoState = TodoItem[];
 export const initialTodoState: TodoState = [];
 
 export const TodoAction = variantModule({
   userAddedItem: {},
-  userToggledItem: fields<{ index: number }>(),
+  userSelectedStatus: (args: {
+    index: number;
+    status: TodoItemStatus["type"];
+  }) => ({ ...args, timestamp: new Date() }),
+  userSetSleepUntilDate: fields<{ index: number; date: Date }>(),
   userEditedItemTitle: fields<{ index: number; title: string | undefined }>(),
   userRemovedItem: fields<{ index: number }>(),
   userAddedNote: fields<{ itemIndex: number; contents: string }>(),
@@ -23,9 +35,31 @@ export type TodoAction<T extends TypeNames<typeof TodoAction> = undefined> =
 export const todoReducer = (state: TodoState, action: TodoAction): TodoState =>
   match(action, {
     userAddedItem: () => [...state, emptyItem],
-    userToggledItem: ({ index }) =>
+    userSelectedStatus: ({ index, status, timestamp }) =>
       state.map((item, ind) =>
-        ind === index ? { ...item, isDone: !item.isDone } : item
+        ind === index
+          ? matchLiteral(status, {
+              todo: () => ({ ...item, status: TodoItemStatus.todo() }),
+              onHold: () => ({ ...item, status: TodoItemStatus.onHold() }),
+              sleep: () => ({
+                ...item,
+                status: TodoItemStatus.sleep({ until: timestamp }),
+              }),
+              done: () => ({ ...item, status: TodoItemStatus.done() }),
+            })
+          : item
+      ),
+    userSetSleepUntilDate: ({ index, date }) =>
+      state.map((item, ind) =>
+        ind === index
+          ? matcher(item.status)
+              .when(["sleep"], () => ({
+                ...item,
+                status: TodoItemStatus.sleep({ until: date }),
+              }))
+              .when(["todo", "onHold", "done"], () => item)
+              .complete()
+          : item
       ),
     userEditedItemTitle: ({ index, title }) =>
       state.map((item, ind) =>
