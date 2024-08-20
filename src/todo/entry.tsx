@@ -1,9 +1,11 @@
-import { Checkbox, Grid, IconButton, TextField } from "@mui/material";
+import { Grid, IconButton, MenuItem, Select, TextField } from "@mui/material";
 import { Delete, Note } from "@mui/icons-material";
 import { memo, useState } from "react";
 import { NotesDialog } from "./notes-dialog";
 import { useTodoDispatch, useTodoState } from "../store";
 import { TodoAction } from "./reducer";
+import { matcher } from "variant";
+import { DatePicker } from "@mui/x-date-pickers";
 
 export const TodoEntry: React.FC<{
   index: number;
@@ -12,7 +14,10 @@ export const TodoEntry: React.FC<{
   return (
     <Grid container alignItems="center" item width="100%">
       <Grid item>
-        <IsDone index={index} />
+        <Status index={index} />
+      </Grid>
+      <Grid item>
+        <SleepUntil index={index} />
       </Grid>
       <Grid item flex={1}>
         <Title index={index} />
@@ -29,13 +34,48 @@ export const TodoEntry: React.FC<{
   );
 });
 
-const IsDone: React.FC<{ index: number }> = ({ index }) => {
-  const isDone = useTodoState(s => s[index].isDone);
+const Status: React.FC<{ index: number }> = ({ index }) => {
+  const status = useTodoState(s => s[index].status.type);
   const dispatch = useTodoDispatch();
   return (
-    <Checkbox
-      checked={isDone}
-      onChange={() => dispatch(TodoAction.userToggledItem({ index }))}
+    <Select
+      autoWidth
+      value={status}
+      size="small"
+      onChange={s =>
+        dispatch(
+          TodoAction.userSelectedStatus({
+            index,
+            status: s.target.value as typeof status,
+          })
+        )
+      }
+    >
+      <MenuItem value="todo">Todo</MenuItem>
+      <MenuItem value="onHold">On Hold</MenuItem>
+      <MenuItem value="sleep">Sleep</MenuItem>
+      <MenuItem value="done">Done</MenuItem>
+    </Select>
+  );
+};
+
+const SleepUntil: React.FC<{ index: number }> = ({ index }) => {
+  const untilDate = useTodoState(s =>
+    matcher(s[index].status)
+      .when(["sleep"], ({ until }) => until)
+      .when(["todo", "onHold", "done"], () => undefined)
+      .complete()
+  );
+  const dispatch = useTodoDispatch();
+  if (untilDate === undefined) return <></>;
+  return (
+    <DatePicker
+      slotProps={{ textField: { size: "small" } }}
+      sx={theme => ({ width: theme.spacing(20) })}
+      value={untilDate}
+      onChange={date =>
+        date && dispatch(TodoAction.userSetSleepUntilDate({ index, date }))
+      }
     />
   );
 };
